@@ -191,7 +191,8 @@ export default function EditPage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-4">
-  <AppHeader />
+      <AppHeader />
+
       <h1 className="mb-4 text-2xl font-bold text-slate-900">
         {id ? "Edit book" : "Add book"}
       </h1>
@@ -225,7 +226,29 @@ export default function EditPage() {
           />
         </div>
 
-        <Field label="Title" value={form.title} onChange={(v) => setForm({ ...form, title: v })} />
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-slate-700">Title</span>
+            <button
+              type="button"
+              onClick={() => {
+                const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+                router.push(`/import?query=${encodeURIComponent(q)}`);
+              }}
+              className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Search book
+            </button>
+          </div>
+
+          <input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            placeholder="Book title"
+            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-500 outline-none"
+          />
+        </div>
+
         <Field
           label="Authors"
           value={form.authors}
