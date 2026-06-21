@@ -185,6 +185,16 @@ export default function EditPage() {
     router.push("/");
   }
 
+  function openBookSearch() {
+    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+    router.push(`/import?query=${encodeURIComponent(q)}&mode=book`);
+  }
+
+  function openMediaSearch() {
+    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+    router.push(`/import?query=${encodeURIComponent(q)}&mode=media`);
+  }
+
   if (loading) {
     return <main className="p-4 text-center text-slate-500">Loading...</main>;
   }
@@ -231,10 +241,7 @@ export default function EditPage() {
             <span className="text-sm font-semibold text-slate-700">Title</span>
             <button
               type="button"
-              onClick={() => {
-                const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
-                router.push(`/import?query=${encodeURIComponent(q)}`);
-              }}
+              onClick={openBookSearch}
               className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
             >
               Search book
@@ -255,15 +262,33 @@ export default function EditPage() {
           onChange={(v) => setForm({ ...form, authors: v })}
           placeholder="One author, Another author"
         />
+
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-slate-700">
+              Cover image and description
+            </span>
+            <button
+              type="button"
+              onClick={openMediaSearch}
+              className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Search web
+            </button>
+          </div>
+
+          <input
+            value={form.coverUrl}
+            onChange={(e) => setForm({ ...form, coverUrl: e.target.value })}
+            placeholder="Paste cover image URL"
+            className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-500 outline-none"
+          />
+        </div>
+
         <Field
           label="Publication year"
           value={form.publishedYear}
           onChange={(v) => setForm({ ...form, publishedYear: v })}
-        />
-        <Field
-          label="Cover image URL"
-          value={form.coverUrl}
-          onChange={(v) => setForm({ ...form, coverUrl: v })}
         />
         <Field
           label="Description"
