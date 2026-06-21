@@ -145,28 +145,29 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-3">
           {sorted.map((book) => (
-            <button
-              key={book.id}
-              type="button"
-              onClick={() => router.push(`/edit?id=${book.id}`)}
-              className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
-            >
-              <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                {book.cover_url ? (
-                  <img
-                    src={book.cover_url}
-                    alt={book.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
-              </div>
+  <button
+            <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+  {book.cover_url ? (
+    <img
+      src={book.cover_url}
+      alt={book.title}
+      className="h-full w-full object-cover"
+    />
+  ) : null}
+</div>
 
-              <div className="min-w-0">
-  <h2 className="truncate text-lg font-semibold text-slate-900">
+<div className="min-w-0 flex-1 overflow-hidden">
+  <h2
+    className="line-clamp-2 text-lg font-semibold text-slate-900"
+    title={book.title}
+  >
     {book.title}
   </h2>
 
-  <p className="truncate text-sm text-slate-700">
+  <p
+    className="truncate text-sm text-slate-700"
+    title={book.authors.join(", ")}
+  >
     {book.authors.join(", ") || "Unknown author"}
   </p>
 
@@ -176,11 +177,14 @@ export default function HomePage() {
 
   {book.description ? (
     <>
-      <p className="mt-2 line-clamp-3 text-sm text-slate-600">
+      <p
+        className="mt-2 line-clamp-3 text-xs text-slate-500"
+        title={book.description}
+      >
         {book.description}
       </p>
 
-      <div className="mt-1 text-xs font-medium text-slate-700">
+      <div className="mt-1 text-xs font-medium text-slate-600">
         Read more →
       </div>
     </>
@@ -190,7 +194,7 @@ export default function HomePage() {
     {book.barcode ? `Barcode: ${book.barcode}` : "No barcode"}
   </p>
 </div>
-            </button>
+  </button>
           ))}
         </div>
       )}
