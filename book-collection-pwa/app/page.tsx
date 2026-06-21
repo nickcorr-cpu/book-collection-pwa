@@ -89,33 +89,34 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-4">
-  <AppHeader />
-<div className="mb-4 flex w-full flex-wrap items-center gap-2">
-  <div className="rounded-2xl bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200">
-    <span className="font-medium text-slate-600">Books:</span>{" "}
-    <span className="font-semibold text-slate-900">{books.length}</span>
-  </div>
+      <AppHeader />
 
-  <div className="rounded-2xl bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200">
-    <span className="font-medium text-slate-600">Authors:</span>{" "}
-    <span className="font-semibold text-slate-900">{uniqueAuthors}</span>
-  </div>
+      <div className="mb-4 flex w-full flex-wrap items-center gap-2">
+        <div className="rounded-2xl bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200">
+          <span className="font-medium text-slate-600">Books:</span>{" "}
+          <span className="font-semibold text-slate-900">{books.length}</span>
+        </div>
 
-  <div className="ml-auto flex gap-2">
-    <button
-      onClick={() => router.push("/scan")}
-      className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
-    >
-      Scan
-    </button>
-    <button
-      onClick={() => router.push("/edit")}
-      className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200"
-    >
-      Add
-    </button>
-  </div>
-</div>
+        <div className="rounded-2xl bg-white px-3 py-2 text-sm shadow-sm ring-1 ring-slate-200">
+          <span className="font-medium text-slate-600">Authors:</span>{" "}
+          <span className="font-semibold text-slate-900">{uniqueAuthors}</span>
+        </div>
+
+        <div className="ml-auto flex gap-2">
+          <button
+            onClick={() => router.push("/scan")}
+            className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
+          >
+            Scan
+          </button>
+          <button
+            onClick={() => router.push("/edit")}
+            className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200"
+          >
+            Add
+          </button>
+        </div>
+      </div>
 
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_220px]">
         <input
@@ -145,56 +146,61 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-3">
           {sorted.map((book) => (
-  <button
-            <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-  {book.cover_url ? (
-    <img
-      src={book.cover_url}
-      alt={book.title}
-      className="h-full w-full object-cover"
-    />
-  ) : null}
-</div>
+            <button
+              key={book.id}
+              type="button"
+              onClick={() => router.push(`/edit?id=${book.id}`)}
+              className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
+            >
+              <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                {book.cover_url ? (
+                  <img
+                    src={book.cover_url}
+                    alt={book.title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : null}
+              </div>
 
-<div className="min-w-0 flex-1 overflow-hidden">
-  <h2
-    className="line-clamp-2 text-lg font-semibold text-slate-900"
-    title={book.title}
-  >
-    {book.title}
-  </h2>
+              <div className="min-w-0 flex-1 overflow-hidden">
+                <h2
+                  className="line-clamp-2 text-lg font-semibold text-slate-900"
+                  title={book.title}
+                >
+                  {book.title}
+                </h2>
 
-  <p
-    className="truncate text-sm text-slate-700"
-    title={book.authors.join(", ")}
-  >
-    {book.authors.join(", ") || "Unknown author"}
-  </p>
+                <p
+                  className="truncate text-sm text-slate-700"
+                  title={book.authors.join(", ")}
+                >
+                  {book.authors.join(", ") || "Unknown author"}
+                </p>
 
-  <p className="text-sm text-slate-600">
-    {book.published_year ?? "No year"}
-  </p>
+                <p className="text-sm text-slate-600">
+                  {book.published_year ?? "No year"}
+                </p>
 
-  {book.description ? (
-    <>
-      <p
-        className="mt-2 line-clamp-3 text-xs text-slate-500"
-        title={book.description}
-      >
-        {book.description}
-      </p>
+                {book.description ? (
+                  <>
+                    <p
+                      className="mt-2 line-clamp-3 text-xs text-slate-500"
+                      title={book.description}
+                    >
+                      {book.description}
+                    </p>
 
-      <div className="mt-1 text-xs font-medium text-slate-600">
-        Read more →
-      </div>
-    </>
-  ) : null}
+                    <div className="mt-1 text-xs font-medium text-slate-600">
+                      Read more →
+                    </div>
+                  </>
+                ) : null}
 
-  <p className="mt-2 text-xs text-slate-500">
-    {book.barcode ? `Barcode: ${book.barcode}` : "No barcode"}
-  </p>
-</div>
-  </button>
+                <p className="mt-2 text-xs text-slate-500">
+                  {book.barcode ? `Barcode: ${book.barcode}` : "No barcode"}
+                </p>
+              </div>
+            </button>
           ))}
         </div>
       )}
