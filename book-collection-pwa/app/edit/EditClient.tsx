@@ -44,6 +44,15 @@ function formFromBook(book: Book): FormState {
   };
 }
 
+function authorsToJson(authors: string) {
+  return JSON.stringify(
+    authors
+      .split(",")
+      .map((a) => a.trim())
+      .filter(Boolean)
+  );
+}
+
 export default function EditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,7 +75,7 @@ export default function EditPage() {
       description: searchParams.get("description") ?? "",
       publishedYear: searchParams.get("publishedYear") ?? "",
       coverUrl: searchParams.get("coverUrl") ?? "",
-      notes: "",
+      notes: searchParams.get("notes") ?? "",
       source: searchParams.get("source") ?? "manual",
     }),
     [searchParams]
@@ -151,6 +160,41 @@ export default function EditPage() {
     };
   }, [scanOpen]);
 
+  function buildImportUrl(extra: Record<string, string>) {
+    const params = new URLSearchParams();
+
+    if (id) params.set("id", id);
+    params.set("barcode", form.barcode);
+    params.set("title", form.title);
+    params.set("authors", authorsToJson(form.authors));
+    params.set("description", form.description);
+    params.set("publishedYear", form.publishedYear);
+    params.set("coverUrl", form.coverUrl);
+    params.set("notes", form.notes);
+    params.set("source", form.source);
+
+    for (const [key, value] of Object.entries(extra)) {
+      params.set(key, value);
+    }
+
+    return `/import?${params.toString()}`;
+  }
+
+  function searchForBook() {
+    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+    router.push(buildImportUrl({ query: q, mode: "book" }));
+  }
+
+  function searchForCover() {
+    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+    router.push(buildImportUrl({ query: q, mode: "media", target: "cover" }));
+  }
+
+  function searchForDescription() {
+    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
+    router.push(buildImportUrl({ query: q, mode: "media", target: "description" }));
+  }
+
   async function onSave() {
     if (!form.title.trim()) {
       alert("Please enter a title.");
@@ -183,16 +227,6 @@ export default function EditPage() {
 
     await deleteBook(book.id);
     router.push("/");
-  }
-
-  function openBookSearch() {
-    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
-    router.push(`/import?query=${encodeURIComponent(q)}&mode=book`);
-  }
-
-  function openMediaSearch() {
-    const q = [form.title, form.authors].filter(Boolean).join(" ").trim();
-    router.push(`/import?query=${encodeURIComponent(q)}&mode=media`);
   }
 
   if (loading) {
@@ -241,7 +275,7 @@ export default function EditPage() {
             <span className="text-sm font-semibold text-slate-700">Title</span>
             <button
               type="button"
-              onClick={openBookSearch}
+              onClick={searchForBook}
               className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
             >
               Search book
@@ -265,15 +299,13 @@ export default function EditPage() {
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-slate-700">
-              Cover image and description
-            </span>
+            <span className="text-sm font-semibold text-slate-700">Cover image URL</span>
             <button
               type="button"
-              onClick={openMediaSearch}
+              onClick={searchForCover}
               className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
             >
-              Search web
+              Search cover
             </button>
           </div>
 
@@ -285,16 +317,30 @@ export default function EditPage() {
           />
         </div>
 
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-sm font-semibold text-slate-700">Description</span>
+            <button
+              type="button"
+              onClick={searchForDescription}
+              className="rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white"
+            >
+              Search description
+            </button>
+          </div>
+
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            placeholder="Paste or type a description"
+            className="min-h-28 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-500 outline-none"
+          />
+        </div>
+
         <Field
           label="Publication year"
           value={form.publishedYear}
           onChange={(v) => setForm({ ...form, publishedYear: v })}
-        />
-        <Field
-          label="Description"
-          value={form.description}
-          onChange={(v) => setForm({ ...form, description: v })}
-          multiline
         />
         <Field
           label="Notes"

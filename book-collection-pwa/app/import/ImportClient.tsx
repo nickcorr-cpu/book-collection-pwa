@@ -46,10 +46,34 @@ function parseYear(value?: number | string | null) {
   return match ? Number(match[1]) : null;
 }
 
+function buildBaseEditParams(searchParams: ReturnType<typeof useSearchParams>) {
+  const params = new URLSearchParams();
+
+  const keys = [
+    "id",
+    "barcode",
+    "title",
+    "authors",
+    "description",
+    "publishedYear",
+    "coverUrl",
+    "notes",
+    "source",
+  ] as const;
+
+  for (const key of keys) {
+    const value = searchParams.get(key);
+    if (value) params.set(key, value);
+  }
+
+  return params;
+}
+
 export default function ImportPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") === "media" ? "media" : "book";
+  const target = searchParams.get("target") === "cover" ? "cover" : searchParams.get("target") === "description" ? "description" : null;
 
   const [query, setQuery] = useState(searchParams.get("query") ?? "");
   const [loading, setLoading] = useState(false);
@@ -57,6 +81,7 @@ export default function ImportPage() {
   const [error, setError] = useState("");
 
   const canSearch = useMemo(() => query.trim().length > 0, [query]);
+  const baseEditParams = useMemo(() => buildBaseEditParams(searchParams), [searchParams]);
 
   async function runSearch(searchValue?: string) {
     const q = (searchValue ?? query).trim();
@@ -131,29 +156,45 @@ export default function ImportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  function pickBookResult(book: BookDraft) {
-    const params = new URLSearchParams({
-      barcode: book.barcode ?? "",
-      title: book.title ?? "",
-      authors: JSON.stringify(book.authors ?? []),
-      description: book.description ?? "",
-      publishedYear: book.published_year ? String(book.published_year) : "",
-      coverUrl: book.cover_url ?? "",
-      source: book.source ?? "open_library_search",
-    });
+  function mergeEditParams(extra: Record<string, string>) {
+    const params = new URLSearchParams(baseEditParams);
 
-    router.push(`/edit?${params.toString()}`);
+    for (const [key, value] of Object.entries(extra)) {
+      params.set(key, value);
+    }
+
+    return `/edit?${params.toString()}`;
+  }
+
+  function pickBookResult(book: BookDraft) {
+    router.push(
+      mergeEditParams({
+        barcode: book.barcode ?? "",
+        title: book.title ?? "",
+        authors: JSON.stringify(book.authors ?? []),
+        description: book.description ?? "",
+        publishedYear: book.published_year ? String(book.published_year) : "",
+        coverUrl: book.cover_url ?? "",
+        source: book.source ?? "open_library_search",
+      })
+    );
   }
 
   function pickWebResult(item: WebDraft) {
-    const params = new URLSearchParams({
-      title: item.title ?? "",
-      description: item.description ?? "",
-      coverUrl: item.cover_url ?? "",
+    const extra: Record<string, string> = {
       source: item.source ?? "web_search",
-    });
+    };
 
-    router.push(`/edit?${params.toString()}`);
+    if (target === "cover") {
+      extra.coverUrl = item.cover_url ?? "";
+    } else if (target === "description") {
+      extra.description = item.description ?? "";
+    } else {
+      extra.coverUrl = item.cover_url ?? "";
+      extra.description = item.description ?? "";
+    }
+
+    router.push(mergeEditParams(extra));
   }
 
   return (
@@ -161,12 +202,18 @@ export default function ImportPage() {
       <AppHeader />
 
       <h1 className="mb-2 text-2xl font-bold">
-        {mode === "media" ? "Search cover & description" : "Import book"}
+        {mode === "media"
+          ? target === "cover"
+            ? "Search cover"
+            : target === "description"
+              ? "Search description"
+              : "Search cover & description"
+          : "Import book"}
       </h1>
 
       <p className="mb-4 text-sm text-slate-600">
         {mode === "media"
-          ? "Search the web for a matching retailer or publisher page, then use the cover and description."
+          ? "Search the web for a matching page, then use the cover or description."
           : "Search by ISBN, title, or author. Tap a result to fill the book form."}
       </p>
 
@@ -189,9 +236,7 @@ export default function ImportPage() {
         </button>
       </div>
 
-      {error ? (
-        <p className="mb-4 text-sm text-rose-600">{error}</p>
-      ) : null}
+      {error ? <p className="mb-4 text-sm text-rose-600">{error}</p> : null}
 
       <div className="grid gap-3">
         {mode === "media"
@@ -229,7 +274,11 @@ export default function ImportPage() {
                     onClick={() => pickWebResult(item)}
                     className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white"
                   >
-                    Use cover + description
+                    {target === "cover"
+                      ? "Use cover"
+                      : target === "description"
+                        ? "Use description"
+                        : "Use result"}
                   </button>
                   <a
                     href={item.url}
