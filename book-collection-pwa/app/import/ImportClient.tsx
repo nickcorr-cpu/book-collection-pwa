@@ -73,7 +73,12 @@ export default function ImportPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") === "media" ? "media" : "book";
-  const target = searchParams.get("target") === "cover" ? "cover" : searchParams.get("target") === "description" ? "description" : null;
+  const target =
+    searchParams.get("target") === "cover"
+      ? "cover"
+      : searchParams.get("target") === "description"
+        ? "description"
+        : null;
 
   const [query, setQuery] = useState(searchParams.get("query") ?? "");
   const [loading, setLoading] = useState(false);
@@ -82,6 +87,10 @@ export default function ImportPage() {
 
   const canSearch = useMemo(() => query.trim().length > 0, [query]);
   const baseEditParams = useMemo(() => buildBaseEditParams(searchParams), [searchParams]);
+
+  function goBackToBook() {
+    router.push(`/edit?${baseEditParams.toString()}`);
+  }
 
   async function runSearch(searchValue?: string) {
     const q = (searchValue ?? query).trim();
@@ -201,15 +210,25 @@ export default function ImportPage() {
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-4">
       <AppHeader />
 
-      <h1 className="mb-2 text-2xl font-bold">
-        {mode === "media"
-          ? target === "cover"
-            ? "Search cover"
-            : target === "description"
-              ? "Search description"
-              : "Search cover & description"
-          : "Import book"}
-      </h1>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">
+          {mode === "media"
+            ? target === "cover"
+              ? "Search cover"
+              : target === "description"
+                ? "Search description"
+                : "Search cover & description"
+            : "Import book"}
+        </h1>
+
+        <button
+          type="button"
+          onClick={goBackToBook}
+          className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-slate-900 ring-1 ring-slate-200"
+        >
+          Back to book
+        </button>
+      </div>
 
       <p className="mb-4 text-sm text-slate-600">
         {mode === "media"
