@@ -85,10 +85,11 @@ export default function HomePage() {
         return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
       }
 
-      const aYear = a.published_year ?? Number.POSITIVE_INFINITY;
-      const bYear = b.published_year ?? Number.POSITIVE_INFINITY;
+      // Year sort: newest first
+      const aYear = a.published_year ?? 0;
+      const bYear = b.published_year ?? 0;
 
-      if (aYear !== bYear) return aYear - bYear;
+      if (aYear !== bYear) return bYear - aYear;
 
       return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
     });
@@ -190,7 +191,7 @@ export default function HomePage() {
         >
           <option value="title">Sort: Title A–Z</option>
           <option value="author">Sort: Author A–Z</option>
-          <option value="year">Sort: Year (oldest first)</option>
+          <option value="year">Sort: Year (newest first)</option>
         </select>
       </div>
 
@@ -201,7 +202,7 @@ export default function HomePage() {
           No books yet. Scan one or add one manually.
         </p>
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_40px]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_48px]">
           <div className="grid gap-3">
             {sorted.map((book) => {
               const label = getIndexLabel(book, sortMode);
@@ -267,14 +268,27 @@ export default function HomePage() {
             })}
           </div>
 
-          <aside className="hidden lg:flex">
-            <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] w-full flex-col items-center gap-1 rounded-full bg-white px-1 py-2 shadow-sm ring-1 ring-slate-200">
+          <aside className="flex justify-center lg:justify-end">
+            <div
+              className="
+                sticky top-4 z-20
+                flex max-h-[70vh] w-full max-w-[44px]
+                flex-wrap justify-center gap-1
+                rounded-full bg-white px-1 py-2 shadow-sm ring-1 ring-slate-200
+                lg:max-h-[calc(100vh-2rem)] lg:flex-col lg:flex-nowrap
+              "
+            >
               {indexEntries.map((label) => (
                 <button
                   key={label}
                   type="button"
                   onClick={() => scrollToLabel(label)}
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-slate-500 transition hover:bg-slate-900 hover:text-white"
+                  className="
+                    flex h-8 w-8 items-center justify-center rounded-full
+                    text-[11px] font-semibold text-slate-500 transition
+                    hover:bg-slate-900 hover:text-white
+                    active:bg-slate-900 active:text-white
+                  "
                   aria-label={`Jump to ${label}`}
                   title={`Jump to ${label}`}
                 >
