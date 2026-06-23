@@ -27,16 +27,18 @@ function getSortValue(book: Book, sortMode: SortMode) {
   return book.published_year?.toString() ?? "";
 }
 
-function getIndexLabel(book: Book, sortMode: SortMode) {
-  if (sortMode === "year") {
-    return book.published_year ? String(book.published_year) : "#";
-  }
-
+function getAlphaIndexLabel(book: Book, sortMode: Exclude<SortMode, "year">) {
   const value = getSortValue(book, sortMode).trim();
   if (!value) return "#";
 
   const first = value[0].toUpperCase();
   return first >= "A" && first <= "Z" ? first : "#";
+}
+
+function getDecadeLabel(year?: number | null) {
+  if (!year) return "#";
+  const decade = Math.floor(year / 10) * 10;
+  return `${decade}s`;
 }
 
 export default function HomePage() {
@@ -79,7 +81,9 @@ export default function HomePage() {
       if (sortMode === "author") {
         const aAuthor = a.authors[0] ?? "";
         const bAuthor = b.authors[0] ?? "";
-        const authorCompare = aAuthor.localeCompare(bAuthor, undefined, { sensitivity: "base" });
+        const authorCompare = aAuthor.localeCompare(bAuthor, undefined, {
+          sensitivity: "base",
+        });
         if (authorCompare !== 0) return authorCompare;
 
         return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
@@ -102,7 +106,11 @@ export default function HomePage() {
     const entries: string[] = [];
 
     for (const book of sorted) {
-      const label = getIndexLabel(book, sortMode);
+      const label =
+        sortMode === "year"
+          ? getDecadeLabel(book.published_year)
+          : getAlphaIndexLabel(book, sortMode);
+
       if (!seen.has(label)) {
         seen.add(label);
         entries.push(label);
@@ -205,7 +213,10 @@ export default function HomePage() {
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_48px]">
           <div className="grid gap-3">
             {sorted.map((book) => {
-              const label = getIndexLabel(book, sortMode);
+              const label =
+                sortMode === "year"
+                  ? getDecadeLabel(book.published_year)
+                  : getAlphaIndexLabel(book, sortMode);
 
               return (
                 <button
@@ -272,8 +283,8 @@ export default function HomePage() {
             <div
               className="
                 sticky top-4 z-20
-                flex max-h-[70vh] w-full max-w-[44px]
-                flex-wrap justify-center gap-1
+                flex max-h-[70vh] w-full max-w-[56px]
+                flex-wrap justify-center gap-1 overflow-y-auto
                 rounded-full bg-white px-1 py-2 shadow-sm ring-1 ring-slate-200
                 lg:max-h-[calc(100vh-2rem)] lg:flex-col lg:flex-nowrap
               "
@@ -284,7 +295,7 @@ export default function HomePage() {
                   type="button"
                   onClick={() => scrollToLabel(label)}
                   className="
-                    flex h-8 w-8 items-center justify-center rounded-full
+                    flex h-8 w-12 items-center justify-center rounded-full
                     text-[11px] font-semibold text-slate-500 transition
                     hover:bg-slate-900 hover:text-white
                     active:bg-slate-900 active:text-white
