@@ -1,7 +1,7 @@
 "use client";
 
 import AppHeader from "@/components/AppHeader";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchBooks, searchBooks } from "@/lib/books";
 import type { Book } from "@/lib/types";
@@ -21,12 +21,32 @@ function getInitialSortMode(): SortMode {
   return "title";
 }
 
+function getSortValue(book: Book, sortMode: SortMode) {
+  if (sortMode === "title") return book.title ?? "";
+  if (sortMode === "author") return book.authors[0] ?? "";
+  return book.published_year?.toString() ?? "";
+}
+
+function getIndexLabel(book: Book, sortMode: SortMode) {
+  if (sortMode === "year") {
+    return book.published_year ? String(book.published_year) : "#";
+  }
+
+  const value = getSortValue(book, sortMode).trim();
+  if (!value) return "#";
+
+  const first = value[0].toUpperCase();
+  return first >= "A" && first <= "Z" ? first : "#";
+}
+
 export default function HomePage() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>(getInitialSortMode);
+
+  const sectionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   async function load() {
     setLoading(true);
@@ -76,6 +96,27 @@ export default function HomePage() {
     return items;
   }, [filtered, sortMode]);
 
+  const indexEntries = useMemo(() => {
+    const seen = new Set<string>();
+    const entries: string[] = [];
+
+    for (const book of sorted) {
+      const label = getIndexLabel(book, sortMode);
+      if (!seen.has(label)) {
+        seen.add(label);
+        entries.push(label);
+      }
+    }
+
+    if (sortMode === "year") {
+      return entries;
+    }
+
+    const alpha = entries.filter((x) => x !== "#").sort();
+    const hash = entries.includes("#") ? ["#"] : [];
+    return [...alpha, ...hash];
+  }, [sorted, sortMode]);
+
   const uniqueAuthors = useMemo(() => {
     const set = new Set<string>();
     for (const book of books) {
@@ -87,8 +128,24 @@ export default function HomePage() {
     return set.size;
   }, [books]);
 
+  const registerItemRef = (label: string) => (el: HTMLButtonElement | null) => {
+    if (el && !sectionRefs.current[label]) {
+      sectionRefs.current[label] = el;
+    }
+  };
+
+  const scrollToLabel = (label: string) => {
+    const el = sectionRefs.current[label];
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   return (
-    <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-4">
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4">
       <AppHeader />
 
       <div className="mb-4 flex w-full flex-wrap items-center gap-2">
@@ -118,7 +175,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_220px]">
+      <div className="mb-4 grid gap-3 lg:grid-cols-[1fr_220px]">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -144,64 +201,88 @@ export default function HomePage() {
           No books yet. Scan one or add one manually.
         </p>
       ) : (
-        <div className="grid gap-3">
-          {sorted.map((book) => (
-            <button
-              key={book.id}
-              type="button"
-              onClick={() => router.push(`/edit?id=${book.id}`)}
-              className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
-            >
-              <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                {book.cover_url ? (
-                  <img
-                    src={book.cover_url}
-                    alt={book.title}
-                    className="h-full w-full object-cover"
-                  />
-                ) : null}
-              </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_40px]">
+          <div className="grid gap-3">
+            {sorted.map((book) => {
+              const label = getIndexLabel(book, sortMode);
 
-              <div className="min-w-0 flex-1 overflow-hidden">
-                <h2
-                  className="line-clamp-2 text-lg font-semibold text-slate-900"
-                  title={book.title}
+              return (
+                <button
+                  key={book.id}
+                  ref={registerItemRef(label)}
+                  type="button"
+                  onClick={() => router.push(`/edit?id=${book.id}`)}
+                  className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
                 >
-                  {book.title}
-                </h2>
+                  <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                    {book.cover_url ? (
+                      <img
+                        src={book.cover_url}
+                        alt={book.title}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : null}
+                  </div>
 
-                <p
-                  className="truncate text-sm text-slate-700"
-                  title={book.authors.join(", ")}
-                >
-                  {book.authors.join(", ") || "Unknown author"}
-                </p>
-
-                <p className="text-sm text-slate-600">
-                  {book.published_year ?? "No year"}
-                </p>
-
-                {book.description ? (
-                  <>
-                    <p
-                      className="mt-2 line-clamp-3 text-xs text-slate-500"
-                      title={book.description}
+                  <div className="min-w-0 flex-1 overflow-hidden">
+                    <h2
+                      className="line-clamp-2 text-lg font-semibold text-slate-900"
+                      title={book.title}
                     >
-                      {book.description}
+                      {book.title}
+                    </h2>
+
+                    <p
+                      className="truncate text-sm text-slate-700"
+                      title={book.authors.join(", ")}
+                    >
+                      {book.authors.join(", ") || "Unknown author"}
                     </p>
 
-                    <div className="mt-1 text-xs font-medium text-slate-600">
-                      Read more →
-                    </div>
-                  </>
-                ) : null}
+                    <p className="text-sm text-slate-600">
+                      {book.published_year ?? "No year"}
+                    </p>
 
-                <p className="mt-2 text-xs text-slate-500">
-                  {book.barcode ? `Barcode: ${book.barcode}` : "No barcode"}
-                </p>
-              </div>
-            </button>
-          ))}
+                    {book.description ? (
+                      <>
+                        <p
+                          className="mt-2 line-clamp-3 text-xs text-slate-500"
+                          title={book.description}
+                        >
+                          {book.description}
+                        </p>
+
+                        <div className="mt-1 text-xs font-medium text-slate-600">
+                          Read more →
+                        </div>
+                      </>
+                    ) : null}
+
+                    <p className="mt-2 text-xs text-slate-500">
+                      {book.barcode ? `Barcode: ${book.barcode}` : "No barcode"}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <aside className="hidden lg:flex">
+            <div className="sticky top-4 flex max-h-[calc(100vh-2rem)] w-full flex-col items-center gap-1 rounded-full bg-white px-1 py-2 shadow-sm ring-1 ring-slate-200">
+              {indexEntries.map((label) => (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => scrollToLabel(label)}
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold text-slate-500 transition hover:bg-slate-900 hover:text-white"
+                  aria-label={`Jump to ${label}`}
+                  title={`Jump to ${label}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </aside>
         </div>
       )}
     </main>
