@@ -89,7 +89,6 @@ export default function HomePage() {
         return a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
       }
 
-      // Year sort: newest first
       const aYear = a.published_year ?? 0;
       const bYear = b.published_year ?? 0;
 
@@ -136,6 +135,9 @@ export default function HomePage() {
     }
     return set.size;
   }, [books]);
+
+  // Clear refs on each render so the index always targets the current list.
+  sectionRefs.current = {};
 
   const registerItemRef = (label: string) => (el: HTMLButtonElement | null) => {
     if (el && !sectionRefs.current[label]) {
@@ -279,14 +281,13 @@ export default function HomePage() {
             })}
           </div>
 
-          <aside className="flex justify-center lg:justify-end">
+          <aside className="hidden lg:flex lg:justify-end">
             <div
               className="
                 sticky top-4 z-20
-                flex max-h-[70vh] w-full max-w-[56px]
-                flex-wrap justify-center gap-1 overflow-y-auto
+                flex max-h-[calc(100vh-2rem)] w-full max-w-[56px]
+                flex-col flex-nowrap items-center gap-1 overflow-y-auto
                 rounded-full bg-white px-1 py-2 shadow-sm ring-1 ring-slate-200
-                lg:max-h-[calc(100vh-2rem)] lg:flex-col lg:flex-nowrap
               "
             >
               {indexEntries.map((label) => (
@@ -310,6 +311,36 @@ export default function HomePage() {
           </aside>
         </div>
       )}
+
+      <div className="lg:hidden">
+        <div
+          className="
+            fixed bottom-4 right-3 z-30
+            max-h-[45vh] w-[64px] overflow-y-auto
+            rounded-full bg-white px-1 py-2 shadow-lg ring-1 ring-slate-200
+          "
+        >
+          <div className="flex flex-col items-center gap-1">
+            {indexEntries.map((label) => (
+              <button
+                key={label}
+                type="button"
+                onClick={() => scrollToLabel(label)}
+                className="
+                  flex h-8 w-12 items-center justify-center rounded-full
+                  text-[11px] font-semibold text-slate-500 transition
+                  hover:bg-slate-900 hover:text-white
+                  active:bg-slate-900 active:text-white
+                "
+                aria-label={`Jump to ${label}`}
+                title={`Jump to ${label}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </main>
   );
-}
+}git
