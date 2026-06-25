@@ -4,7 +4,13 @@ import AppHeader from "@/components/AppHeader";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BrowserMultiFormatReader, type IScannerControls } from "@zxing/browser";
-import { deleteBook, getBookById, normalizeBarcode, parseYear, saveBook } from "@/lib/books";
+import {
+  deleteBook,
+  getBookById,
+  normalizeBarcode,
+  parseYear,
+  saveBook,
+} from "@/lib/books";
 import type { Book } from "@/lib/types";
 
 type FormState = {
@@ -195,6 +201,10 @@ export default function EditPage() {
     router.push(buildImportUrl({ query: q, mode: "media", target: "description" }));
   }
 
+  function goBackToLibrary() {
+    router.push("/");
+  }
+
   async function onSave() {
     if (!form.title.trim()) {
       alert("Please enter a title.");
@@ -237,9 +247,19 @@ export default function EditPage() {
     <main className="mx-auto min-h-screen w-full max-w-2xl px-4 py-4">
       <AppHeader />
 
-      <h1 className="mb-4 text-2xl font-bold text-slate-900">
-        {id ? "Edit book" : "Add book"}
-      </h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-slate-900">
+          {id ? "Edit book" : "Add book"}
+        </h1>
+
+        <button
+          type="button"
+          onClick={goBackToLibrary}
+          className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 ring-1 ring-slate-200"
+        >
+          Back to library
+        </button>
+      </div>
 
       {form.coverUrl ? (
         <img
@@ -299,7 +319,9 @@ export default function EditPage() {
 
         <div className="grid gap-2">
           <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-semibold text-slate-700">Cover image URL</span>
+            <span className="text-sm font-semibold text-slate-700">
+              Cover image URL
+            </span>
             <button
               type="button"
               onClick={searchForCover}
