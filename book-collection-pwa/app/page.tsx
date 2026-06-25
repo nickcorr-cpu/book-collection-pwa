@@ -54,6 +54,10 @@ function getDecadeLabel(year?: number | null) {
   return `${decade}s`;
 }
 
+function labelToAnchorId(label: string) {
+  return `jump-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+}
+
 function saveLibraryState(state: LibraryState) {
   if (typeof window === "undefined") return;
   window.sessionStorage.setItem(LIBRARY_STATE_KEY, JSON.stringify(state));
@@ -79,7 +83,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [sortMode, setSortMode] = useState<SortMode>(getInitialSortMode);
 
-  const sectionRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const restoreStateRef = useRef<LibraryState | null>(null);
   const restoredRef = useRef(false);
 
@@ -200,25 +203,6 @@ export default function HomePage() {
     return set.size;
   }, [books]);
 
-  // Clear refs on each render so the index always targets the current list.
-  sectionRefs.current = {};
-
-  const registerItemRef = (label: string) => (el: HTMLButtonElement | null) => {
-    if (el && !sectionRefs.current[label]) {
-      sectionRefs.current[label] = el;
-    }
-  };
-
-  const scrollToLabel = (label: string) => {
-    const el = sectionRefs.current[label];
-    if (!el) return;
-
-    el.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   const saveAndGo = (path: string) => {
     saveLibraryState({
       query,
@@ -226,6 +210,16 @@ export default function HomePage() {
       scrollY: window.scrollY,
     });
     router.push(path);
+  };
+
+  const jumpToLabel = (label: string) => {
+    const el = document.getElementById(labelToAnchorId(label));
+    if (!el) return;
+
+    el.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const pickLabelAtClientX = (clientX: number) => {
@@ -255,7 +249,7 @@ export default function HomePage() {
     const label = closestButton.dataset.indexLabel;
     if (label) {
       setActiveMobileLabel(label);
-      scrollToLabel(label);
+      jumpToLabel(label);
     }
   };
 
@@ -274,6 +268,8 @@ export default function HomePage() {
     scrubbingRef.current = false;
     setActiveMobileLabel(null);
   };
+
+  const seenAnchorLabels = new Set<string>();
 
   return (
     <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4 pb-28 lg:pb-4">
@@ -340,13 +336,20 @@ export default function HomePage() {
                   ? getDecadeLabel(book.published_year)
                   : getAlphaIndexLabel(book, sortMode);
 
+              const anchorId = labelToAnchorId(label);
+              const isFirstOfLabel = !seenAnchorLabels.has(label);
+
+              if (isFirstOfLabel) {
+                seenAnchorLabels.add(label);
+              }
+
               return (
                 <button
                   key={book.id}
-                  ref={registerItemRef(label)}
+                  id={isFirstOfLabel ? anchorId : undefined}
                   type="button"
                   onClick={() => saveAndGo(`/edit?id=${book.id}`)}
-                  className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
+                  className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200 scroll-mt-24 lg:scroll-mt-28"
                 >
                   <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                     {book.cover_url ? (
@@ -416,7 +419,7 @@ export default function HomePage() {
                 <button
                   key={label}
                   type="button"
-                  onClick={() => scrollToLabel(label)}
+                  onClick={() => jumpToLabel(label)}
                   className="
                     flex h-8 w-12 items-center justify-center rounded-full
                     text-[11px] font-semibold text-slate-500 transition
@@ -457,7 +460,7 @@ export default function HomePage() {
                   key={label}
                   type="button"
                   data-index-label={label}
-                  onClick={() => scrollToLabel(label)}
+                  onClick={() => jumpToLabel(label)}
                   className={[
                     "shrink-0 rounded-full px-2 py-1.5 text-[11px] font-semibold transition",
                     active
