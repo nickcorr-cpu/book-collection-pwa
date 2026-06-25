@@ -276,7 +276,7 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4 pb-24 lg:pb-4">
+    <main className="mx-auto min-h-screen w-full max-w-6xl px-4 py-4 pb-28 lg:pb-4">
       <AppHeader />
 
       <div className="mb-4 flex w-full flex-wrap items-center gap-2">
@@ -348,11 +348,13 @@ export default function HomePage() {
                   onClick={() => saveAndGo(`/edit?id=${book.id}`)}
                   className="flex w-full gap-4 rounded-3xl bg-white p-4 text-left shadow-sm ring-1 ring-slate-200"
                 >
-                  <div className="h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                  <div className="relative h-28 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
                     {book.cover_url ? (
                       <img
                         src={book.cover_url}
                         alt={book.title}
+                        loading="lazy"
+                        decoding="async"
                         className="h-full w-full object-cover"
                       />
                     ) : null}
@@ -436,8 +438,8 @@ export default function HomePage() {
         <div
           ref={mobileIndexBarRef}
           className="
-            fixed inset-x-0 bottom-0 z-40
-            border-t border-slate-200 bg-white/95 backdrop-blur shadow-lg
+            fixed left-1/2 bottom-4 z-40 w-[90vw] max-w-md -translate-x-1/2
+            rounded-full border border-slate-200 bg-white/95 shadow-xl backdrop-blur
             touch-none
           "
           onPointerDown={startScrub}
@@ -446,7 +448,7 @@ export default function HomePage() {
           onPointerCancel={endScrub}
           onPointerLeave={endScrub}
         >
-          <div className="flex items-center gap-2 overflow-x-auto px-2 py-2">
+          <div className="flex items-center gap-1 overflow-x-auto px-2 py-2">
             {indexEntries.map((label) => {
               const active = activeMobileLabel === label;
 
@@ -457,10 +459,10 @@ export default function HomePage() {
                   data-index-label={label}
                   onClick={() => scrollToLabel(label)}
                   className={[
-                    "shrink-0 rounded-full border px-3 py-2 text-xs font-semibold transition",
+                    "shrink-0 rounded-full px-2 py-1.5 text-[11px] font-semibold transition",
                     active
-                      ? "border-slate-900 bg-slate-900 text-white"
-                      : "border-slate-200 bg-white text-slate-600",
+                      ? "bg-slate-900 text-white"
+                      : "bg-white text-slate-600",
                   ].join(" ")}
                   aria-label={`Jump to ${label}`}
                 >
